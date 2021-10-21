@@ -116,4 +116,4 @@ if len(messages) > 0:
     print(dropdown_text, flush=True)
 
 else:
-    print('', flush=True)
+    print("No messages | color={0}".format(colours['inactive']), flush=True)

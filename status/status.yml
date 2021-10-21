@@ -1,4 +1,6 @@
 levels:
+  - inactive:
+      foreground: '#555555'
   - info:
       foreground: '#ffffff'
   - error:
