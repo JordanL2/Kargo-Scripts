@@ -45,22 +45,24 @@ messages = []
 files = [f for f in sorted(listdir(scripts_dir)) if os.path.isfile(os.path.join(scripts_dir, f))]
 for file in files:
     try:
-        results = cmd(os.path.join(scripts_dir, file))
-        for result in results.split("\n"):
-            if result == "":
-                continue
-            match = message_regex.match(result)
-            if not match:
-                messages.append({
-                    'level': 'error', 
-                    'label': '', 
-                    'text': "Status script {} returned malformed line: '{}'".format(file, result)
-                    })
-            else:
-                messages.append({
-                    'level': match.group(1), 
-                    'label': match.group(2), 
-                    'text': match.group(3)})
+        filepath = os.path.join(scripts_dir, file)
+        if os.access(filepath, os.X_OK):
+            results = cmd(filepath)
+            for result in results.split("\n"):
+                if result == "":
+                    continue
+                match = message_regex.match(result)
+                if not match:
+                    messages.append({
+                        'level': 'error', 
+                        'label': '', 
+                        'text': "Status script {} returned malformed line: '{}'".format(file, result)
+                        })
+                else:
+                    messages.append({
+                        'level': match.group(1), 
+                        'label': match.group(2), 
+                        'text': match.group(3)})
     except Exception:
         messages.append({
             'level': 'error', 
