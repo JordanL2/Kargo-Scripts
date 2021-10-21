@@ -1,7 +1,5 @@
 levels:
   - info:
-      background: '#004000'
       foreground: '#ffffff'
   - error:
-      background: '#400000'
       foreground: '#ff0000'

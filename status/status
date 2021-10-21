@@ -21,19 +21,20 @@ def cmd(command):
 
 
 scriptpath = sys.argv.pop(0)
-scripts_dir = os.path.expanduser("~/.config/status.d")
+config_dir = os.path.expanduser("~/.config")
+scripts_dir = config_dir + "/status.d"
 
 # Config
 colours = {}
 levels = []
-config_file = os.path.abspath(os.path.dirname(scriptpath)) + "/status.yml"
+config_file = config_dir + "/status.yml"
 if os.path.exists(config_file):
     with open(config_file, 'r') as fh:
         config = yaml.load(fh, Loader=yaml.CLoader)
         for level in config['levels']:
             level_key = list(level.keys())[0]
             levels.append(level_key)
-            colours[level_key] = (level[level_key]['background'], level[level_key]['foreground'])
+            colours[level_key] = level[level_key]['foreground']
 
 message_regex = re.compile(r'([^|]*)\|([^|]*)\|(.*)')
 
@@ -96,7 +97,7 @@ if len(messages) > 0:
         "{0}{1} | color={2}".format(
             ("[{}] ".format(m['label']) if m['label'] != '' else ''),
             m['text'],
-            colours[m['level']][1],
+            colours[m['level']],
         )
         for m in sorted(menu_messages, key=lambda x: str(len(levels) - levels.index(x['level'])) + x['label'])
     ]
@@ -105,9 +106,9 @@ if len(messages) > 0:
     dropdown_text = ''
     for label in [l for l in sorted(labels.keys()) if l != ''] + ['']:
         label_messages = labels[label]['messages']
-        dropdown_text += "{0} ({1}) | size=16 color={2}\n".format((label if label != '' else 'Other'), len(label_messages), colours[labels[label]['level']][1])
+        dropdown_text += "{0} ({1}) | size=16 color={2}\n".format((label if label != '' else 'Other'), len(label_messages), colours[labels[label]['level']])
         for m in label_messages:
-            dropdown_text += "-- {0} | color={1}\n".format(m['text'], colours[m['level']][1])
+            dropdown_text += "-- {0} | color={1}\n".format(m['text'], colours[m['level']])
 
     # Output data to Waybar
     print(menu_text)
