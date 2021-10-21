@@ -105,10 +105,11 @@ if len(messages) > 0:
 
     dropdown_text = ''
     for label in [l for l in sorted(labels.keys()) if l != ''] + ['']:
-        label_messages = labels[label]['messages']
-        dropdown_text += "{0} ({1}) | size=16 color={2}\n".format((label if label != '' else 'Other'), len(label_messages), colours[labels[label]['level']])
-        for m in label_messages:
-            dropdown_text += "-- {0} | color={1}\n".format(m['text'], colours[m['level']])
+        if label in labels:
+            label_messages = labels[label]['messages']
+            dropdown_text += "{0} ({1}) | size=16 color={2}\n".format((label if label != '' else 'Other'), len(label_messages), colours[labels[label]['level']])
+            for m in label_messages:
+                dropdown_text += "-- {0} | color={1}\n".format(m['text'], colours[m['level']])
 
     # Output data to Waybar
     print(menu_text)
