@@ -91,13 +91,14 @@ def main():
         ]
         menu_text = "\n".join(sorted_menu_messages)
 
-        dropdown_text = ''
+        dropdown_messages = []
         for label in [l for l in sorted(labels.keys()) if l != ''] + ['']:
             if label in labels:
                 label_messages = labels[label]['messages']
-                dropdown_text += "{0} ({1}) | size=16 color={2}\n".format((label if label != '' else 'Other'), len(label_messages), colours[labels[label]['level']])
+                dropdown_messages.append("{0} ({1}) | size=16 color={2}".format((label if label != '' else 'Other'), len(label_messages), colours[labels[label]['level']]))
                 for m in label_messages:
-                    dropdown_text += "-- {0} | color={1}\n".format(m['text'], colours[m['level']])
+                    dropdown_messages.append("-- {0} | color={1}".format(m['text'], colours[m['level']]))
+        dropdown_text = "\n".join(dropdown_messages)
     
         # Output results to Kargos
         print(menu_text)
