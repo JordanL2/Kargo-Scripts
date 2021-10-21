@@ -1,0 +1,118 @@
+#!/usr/bin/python3
+
+import json
+from os import listdir
+import os.path
+import re
+import subprocess
+import sys
+import xml.sax.saxutils 
+import time
+import yaml
+
+
+def cmd(command):
+    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout = result.stdout.decode('utf-8').rstrip("\n")
+    stderr = result.stderr.decode('utf-8').rstrip("\n")
+    if result.returncode != 0:
+        raise Exception("Command returned code {}".format(result.returncode))
+    return stdout
+
+
+scriptpath = sys.argv.pop(0)
+scripts_dir = os.path.expanduser("~/.config/status.d")
+
+# Config
+colours = {}
+levels = []
+config_file = os.path.abspath(os.path.dirname(scriptpath)) + "/status.yml"
+if os.path.exists(config_file):
+    with open(config_file, 'r') as fh:
+        config = yaml.load(fh, Loader=yaml.CLoader)
+        for level in config['levels']:
+            level_key = list(level.keys())[0]
+            levels.append(level_key)
+            colours[level_key] = (level[level_key]['background'], level[level_key]['foreground'])
+
+message_regex = re.compile(r'([^|]*)\|([^|]*)\|(.*)')
+
+
+messages = []
+
+# Search for scripts and execute them
+files = [f for f in sorted(listdir(scripts_dir)) if os.path.isfile(os.path.join(scripts_dir, f))]
+for file in files:
+    try:
+        results = cmd(os.path.join(scripts_dir, file))
+        for result in results.split("\n"):
+            if result == "":
+                continue
+            match = message_regex.match(result)
+            if not match:
+                messages.append({
+                    'level': 'error', 
+                    'label': '', 
+                    'text': "Status script {} returned malformed line: '{}'".format(file, result)
+                    })
+            else:
+                messages.append({
+                    'level': match.group(1), 
+                    'label': match.group(2), 
+                    'text': match.group(3)})
+    except Exception:
+        messages.append({
+            'level': 'error', 
+            'label': '', 
+            'text': "Error running status script {}".format(file)})
+
+# Output messages found
+if len(messages) > 0:
+    
+    labels = {}
+    for label in set([m['label'] for m in messages]):
+        label_messages = [m for m in messages if m['label'] == label]
+        label_level = levels[max([levels.index(m['level']) for m in label_messages])]
+        labels[label] = {
+            'messages': label_messages,
+            'count': len(label_messages),
+            'level': label_level,
+        }
+
+    menu_messages = []
+    if '' in labels:
+        menu_messages.extend(labels['']['messages'])
+    for label in labels:
+        if label != '':
+            if labels[label]['count'] > 1:
+                menu_messages.append({
+                    'level': labels[label]['level'],
+                    'label': label,
+                    'text': "({})".format(labels[label]['count'])
+                })
+            else:
+                menu_messages.append(labels[label]['messages'][0])
+    sorted_menu_messages = [
+        "{0}{1} | color={2}".format(
+            ("[{}] ".format(m['label']) if m['label'] != '' else ''),
+            m['text'],
+            colours[m['level']][1],
+        )
+        for m in sorted(menu_messages, key=lambda x: str(len(levels) - levels.index(x['level'])) + x['label'])
+    ]
+    menu_text = "\n".join(sorted_menu_messages)
+
+    dropdown_text = ''
+    for label in [l for l in sorted(labels.keys()) if l != ''] + ['']:
+        label_messages = labels[label]['messages']
+        dropdown_text += "{0} ({1}) | size=16 color={2}\n".format((label if label != '' else 'Other'), len(label_messages), colours[labels[label]['level']][1])
+        for m in label_messages:
+            dropdown_text += "-- {0} | color={1}\n".format(m['text'], colours[m['level']][1])
+
+    # Output data to Waybar
+    print(menu_text)
+    print("---")
+    print(dropdown_text, flush=True)
+
+else:
+    print('', flush=True)
