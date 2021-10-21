@@ -58,6 +58,7 @@ def main():
     # Output messages found
     if len(messages) > 0:
 
+        # Group all messages together by label
         labels = {}
         for label in set([m['label'] for m in messages]):
             label_messages = [m for m in messages if m['label'] == label]
@@ -68,29 +69,32 @@ def main():
                 'level': label_level,
             }
 
-        menu_messages = []
+        # Bar messages - compact multiple messages for a given label into one
+        bar_messages = []
         if '' in labels:
-            menu_messages.extend(labels['']['messages'])
+            bar_messages.extend(labels['']['messages'])
         for label in labels:
             if label != '':
                 if labels[label]['count'] > 1:
-                    menu_messages.append({
+                    bar_messages.append({
                         'level': labels[label]['level'],
                         'label': label,
                         'text': "({})".format(labels[label]['count'])
                     })
                 else:
-                    menu_messages.append(labels[label]['messages'][0])
-        sorted_menu_messages = [
+                    bar_messages.append(labels[label]['messages'][0])
+        # Sort messages by level and label name
+        sorted_bar_messages = [
             "{0}{1} | color={2}".format(
                 ("[{}] ".format(m['label']) if m['label'] != '' else ''),
                 m['text'],
                 colours[m['level']],
             )
-            for m in sorted(menu_messages, key=lambda x: str(len(levels) - levels.index(x['level'])) + x['label'])
+            for m in sorted(bar_messages, key=lambda x: str(len(levels) - levels.index(x['level'])) + x['label'])
         ]
-        menu_text = "\n".join(sorted_menu_messages)
+        bar_text = "\n".join(sorted_bar_messages)
 
+        # Dropdown messages - categoried by label
         dropdown_messages = []
         for label in [l for l in sorted(labels.keys()) if l != ''] + ['']:
             if label in labels:
@@ -101,7 +105,7 @@ def main():
         dropdown_text = "\n".join(dropdown_messages)
     
         # Output results to Kargos
-        print(menu_text)
+        print(bar_text)
         print("---")
         print(dropdown_text, flush=True)
 
