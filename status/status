@@ -1,13 +1,10 @@
 #!/usr/bin/python3
 
-import json
 from os import listdir
 import os.path
 import re
 import subprocess
 import sys
-import xml.sax.saxutils 
-import time
 import yaml
 
 
