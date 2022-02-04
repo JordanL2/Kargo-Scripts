@@ -32,27 +32,28 @@ def main():
     for file_name in files:
         try:
             file_path = os.path.join(scripts_dir, file_name)
+            sudo = file_name.startswith('sudo_')
             if os.access(file_path, os.X_OK):
-                results = cmd(file_path)
+                results = cmd("{}{}".format(("sudo " if sudo else ""), file_path))
                 for result in results.split("\n"):
                     if result == '':
                         continue
                     match = message_regex.match(result)
                     if match:
                         messages.append({
-                            'level': match.group(1), 
-                            'label': match.group(2), 
+                            'level': match.group(1),
+                            'label': match.group(2),
                             'text': match.group(3)})
                     else:
                         messages.append({
-                            'level': 'error', 
-                            'label': '', 
+                            'level': 'error',
+                            'label': '',
                             'text': "Status script {} returned malformed line: '{}'".format(file_name, result)
                             })
         except Exception:
             messages.append({
-                'level': 'error', 
-                'label': '', 
+                'level': 'error',
+                'label': '',
                 'text': "Error running status script {}".format(file_name)})
 
     # Output messages found
@@ -103,7 +104,7 @@ def main():
                 for m in label_messages:
                     dropdown_messages.append("-- {0} | color={1}".format(m['text'], colours[m['level']]))
         dropdown_text = "\n".join(dropdown_messages)
-    
+
         # Output results to Kargos
         print(bar_text)
         print("---")
