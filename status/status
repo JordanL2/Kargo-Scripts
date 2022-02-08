@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import argparse
 from os import listdir
 import os.path
 import re
@@ -9,8 +10,18 @@ import yaml
 
 
 def main():
+    # Arguments
+    parser = argparse.ArgumentParser(prog='status')
+    parser.add_argument('--width', type=int, dest='width', help='Limits width of bar text to this number of characters')
+    parser.add_argument('--scripts', dest='scripts_dir', help='Directory of status scripts to run')
+
+    args = parser.parse_args()
+    bar_width = args.width
+    scripts_dir = args.scripts_dir
+
     # Scripts directory
-    scripts_dir = find_config("status.d", True)
+    if scripts_dir is None:
+        scripts_dir = find_config("status.d", True)
 
     # Config
     colours = {}
@@ -93,7 +104,7 @@ def main():
             )
             for m in sorted(bar_messages, key=lambda x: str(len(levels) - levels.index(x['level'])) + x['label'])
         ]
-        bar_text = "\n".join(sorted_bar_messages)
+        bar_text = "\n".join([(s if bar_width is None else s[0:min(bar_width, len(s))]) for s in sorted_bar_messages])
 
         # Dropdown messages - categoried by label
         dropdown_messages = []
