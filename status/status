@@ -96,15 +96,17 @@ def main():
                 else:
                     bar_messages.append(labels[label]['messages'][0])
         # Sort messages by level and label name
-        sorted_bar_messages = [
-            "{0}{1} | color={2}".format(
-                ("[{}] ".format(m['label']) if m['label'] != '' else ''),
-                m['text'],
-                colours[m['level']],
-            )
-            for m in sorted(bar_messages, key=lambda x: str(len(levels) - levels.index(x['level'])) + x['label'])
-        ]
-        bar_text = "\n".join([(s if bar_width is None else s[0:min(bar_width, len(s))]) for s in sorted_bar_messages])
+        sorted_bar_messages = []
+        for m in sorted(bar_messages, key=lambda x: str(len(levels) - levels.index(x['level'])) + x['label']):
+            message = ''
+            if m['label'] != '':
+                message = "[{}] ".format(m['label'])
+            message += m['text']
+            if bar_width is not None and bar_width < len(message):
+                message = message[0:bar_width]
+
+            sorted_bar_messages.append("{0} | color={1}".format(message, colours[m['level']]))
+        bar_text = "\n".join(sorted_bar_messages)
 
         # Dropdown messages - categoried by label
         dropdown_messages = []
