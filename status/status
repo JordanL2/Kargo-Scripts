@@ -45,7 +45,11 @@ def main():
             file_path = os.path.join(scripts_dir, file_name)
             sudo = file_name.startswith('sudo_')
             if os.access(file_path, os.X_OK):
-                results = cmd("{}\"{}\"".format(("sudo " if sudo else ""), file_path))
+                command = file_path
+                if sudo:
+                    username = cmd("whoami")
+                    command = "sudo -u {} -E sh -c \"{}\"".format(username, command)
+                results = cmd(command)
                 for result in results.split("\n"):
                     if result == '':
                         continue
